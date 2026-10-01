@@ -1,0 +1,123 @@
+<!DOCTYPE html><html lang="fr" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>ARVEA — Suivi des partenaires</title>
+<style>
+:root{--bg:#f6f7f4;--card:#fff;--tx:#1f2a24;--mu:#66736b;--bd:#dde3dd;--ac:#1f7a52;--ac2:#e6f3ec;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141a17;--card:#1d2621;--tx:#e8eee9;--mu:#9bab9f;--bd:#2f3b34;--ac:#4cc08a;--ac2:#1f3a2d}}
+:root[data-theme="dark"]{--bg:#141a17;--card:#1d2621;--tx:#e8eee9;--mu:#9bab9f;--bd:#2f3b34;--ac:#4cc08a;--ac2:#1f3a2d}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,"Segoe UI",Tahoma,Arial,sans-serif}
+main{max-width:1000px;margin:auto;padding:14px}
+header{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}header h1{font-size:18px;margin:0;flex:1;color:var(--ac)}
+button{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:8px;padding:7px 12px;cursor:pointer}
+button.p{background:var(--ac);color:#fff;border-color:var(--ac)}button.on{background:var(--ac2);border-color:var(--ac)}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin:10px 0}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.k{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}.k .c{margin:0}.k b{display:block;font-size:22px;color:var(--ac)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+label{display:flex;flex-direction:column;gap:3px;font-size:13px;color:var(--mu)}
+input,select,textarea{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:6px 8px;width:100%;min-height:34px}
+input[type=checkbox]{width:20px;min-height:20px}textarea{min-height:58px}
+.w{overflow-x:auto;margin-bottom:8px}table{border-collapse:collapse;width:100%}th,td{padding:5px;border-bottom:1px solid var(--bd);text-align:start;font-size:13px}
+.t8 input,.t8 select{min-width:110px}.t8 input[type=number]{min-width:62px}.t8 input[type=checkbox]{min-width:20px}
+tr[data-a]{cursor:pointer}
+.bd{border-radius:99px;padding:2px 9px;font-size:12px;color:#fff;white-space:nowrap}
+.s_g{background:#2e9e6b}.s_y{background:#b8901a}.s_o{background:#d9772a}.s_r{background:#d64545}.s_n{background:#8a948d}
+h2,h3{margin:6px 0}h3{font-size:15px}dialog{background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:12px;width:min(520px,92vw)}
+</style></head><body><main>
+<div id="warn" class="c" hidden>⚠ Stockage du navigateur indisponible : les données ne seront pas conservées. / التخزين غير متاح، لن يتم حفظ البيانات.</div>
+<div id="app"></div></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const SB_URL='https://alemodrimclzrrlrroly.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsZW1vZHJpbWNsenJybHJyb2x5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4NDkyMDEsImV4cCI6MjEwNjQyNTIwMX0.CgaE0uAnxbfeOBhCRFbm2pgP7PrT8ybufJmyQ2bDeWM';
+const L={
+title:["Suivi des partenaires ARVEA","متابعة شركاء ARVEA"],dash:["Tableau de bord","لوحة القيادة"],add:["+ Nouveau partenaire","+ شريك جديد"],
+back:["← Retour","→ رجوع"],del:["Supprimer","حذف"],cdel:["Cliquer pour confirmer la suppression","اضغط لتأكيد الحذف"],saved:["Enregistré automatiquement","الحفظ تلقائي"],
+bk:["Sauvegarde","نسخة احتياطية"],bkh:["Copiez ce texte pour sauvegarder vos fiches, ou collez une sauvegarde puis cliquez sur Importer.","انسخ هذا النص لحفظ بطاقاتك، أو الصق نسخة ثم اضغط استيراد."],
+cp:["Copier","نسخ"],imp:["Importer","استيراد"],close:["Fermer","إغلاق"],none:["Aucun partenaire pour l'instant. Créez votre première fiche.","لا يوجد شركاء بعد. أنشئ أول بطاقة."],np:["Nouveau partenaire","شريك جديد"],
+nb:["Partenaires","الشركاء"],byst:["Répartition par statut","التوزيع حسب الحالة"],lvl:["Niveaux de duplication","مستويات التكرار"],watch:["À surveiller","للمتابعة"],
+name:["Nom du partenaire","اسم الشريك"],phone:["Téléphone","الهاتف"],leader:["Leader / parrain","القائد / الراعي"],d0:["Date d'inscription (J0)","تاريخ التسجيل (J0)"],
+why:["Pourquoi a-t-il rejoint ?","لماذا انضم؟"],whyo:[["Réseau","Vente","Consommation"],["شبكة","بيع","استهلاك"]],hours:["Temps disponible (h / semaine)","الوقت المتاح (ساعة / أسبوع)"],
+exp:["Expériences préalables","الخبرات السابقة"],goal:["Objectif chiffré à 90 jours","الهدف الرقمي خلال 90 يوما"],goald:["Date de fixation de l'objectif","تاريخ تحديد الهدف"],
+A:["A. Diagnostic d'entrée (J0)","أ. تشخيص البداية (J0)"],B:["B. Revue hebdomadaire (J0 → J30)","ب. المراجعة الأسبوعية (J0 → J30)"],C:["C. Statut à J30","ج. الحالة عند J30"],
+week:["Semaine","الأسبوع"],date:["Date","التاريخ"],acts:["Actions réalisées (chiffrées)","الأعمال المنجزة (بالأرقام)"],block:["Blocage identifié","العائق"],pos:["Point positif","نقطة إيجابية"],next:["Prochaine action + date","الإجراء القادم + التاريخ"],
+status:["Statut","الحالة"],st30:[["Lancé et actif","Lancé mais lent","Bloqué"],["انطلق ونشيط","انطلق لكن بطيء","متوقف"]],
+dec:[["Maintien","Accompagnement renforcé","Entretien de clarification"],["استمرار","مرافقة معززة","جلسة توضيح"]],decl:["Décision du leader","قرار القائد"],comment:["Commentaire","تعليق"],
+rev:["Revue","مراجعة"],best:["Ce qui a le mieux fonctionné","ما نجح أكثر"],cost:["Ce qui a coûté le plus d'énergie sans résultat","ما استهلك طاقة دون نتيجة"],kind:["Temps, méthode ou croyance ?","الوقت أم الطريقة أم الاعتقاد؟"],
+kinds:[["Temps","Méthode","Croyance"],["الوقت","الطريقة","الاعتقاد"]],prog:["Avancement chiffré vs objectif","التقدم الرقمي مقابل الهدف"],
+st90:[["Autonome","Sous rythme","Activité forte / résultat faible","Inactif"],["مستقل","دون الوتيرة","نشاط قوي / نتيجة ضعيفة","غير نشط"]],
+final:["Décision de statut à 90 jours","قرار الحالة عند 90 يوما"],level:["Niveau de duplication","مستوى التكرار"],just:["Justification","التبرير"],
+lvs:[["N0 — Suit une formation, n'applique rien","N1 — Applique pour lui-même","N2 — Forme et suit ses propres filleuls","N3 — Corrige et coache ses filleuls sans aide"],["N0 — يتابع التكوين دون تطبيق","N1 — يطبّق لنفسه","N2 — يكوّن ويتابع شركاءه","N3 — يصحّح ويدرّب شركاءه دون مساعدة"]],
+tb0:["Fiche J0–J30 (T3)","بطاقة J0–J30 (T3)"],tb1:["Suivi J30–J90 (T4)","المتابعة J30–J90 (T4)"],tb2:["Tableau hebdo (T8)","الجدول الأسبوعي (T8)"],tb3:["Duplication (T9)","التكرار (T9)"],tb4:["Entretiens & coaching","المقابلات والتدريب"],
+from:["Semaine du","أسبوع بتاريخ"],contacts:["Contacts","اتصالات"],invit:["Invitations","دعوات"],pres:["Présentations","عروض"],relances:["Relances","متابعات"],closings:["Closings","إغلاقات"],vol:["Volume / ventes (DT)","الحجم / المبيعات (د.ت)"],
+ind:["Indicateur défini","المؤشر المحدد"],ok:["Atteint ?","تحقق؟"],read:["Lecture","القراءة"],rds:[["🟢 Conforme","🟠 Beaucoup d'activité, peu de conversion (coaching technique)","🔴 Peu d'activité (coaching motivationnel)"],["🟢 مطابق","🟠 نشاط كثير ونتيجة ضعيفة (تدريب تقني)","🔴 نشاط قليل (تدريب تحفيزي)"]],
+act:["Action / coaching","الإجراء / التدريب"],addw:["+ Ajouter une semaine","+ إضافة أسبوع"],tot:["Total","المجموع"],hist:["Historique des passages de niveau","سجل تغيّر المستوى"],proof:["Preuve observée","الدليل المرصود"],addh:["+ Ajouter","+ إضافة"],
+lgt:[["T2 — Suivi post-formation J+2 / J+7","T6 — Entretien correctif","T7 — Coaching terrain"],["T2 — متابعة ما بعد التكوين J+2 / J+7","T6 — مقابلة تصحيحية","T7 — تدريب ميداني"]],
+type:["Type","النوع"],subj:["Sujet / engagement chiffré","الموضوع / الالتزام الرقمي"],notes:["Notes, résultat, cause de l'écart","ملاحظات، نتيجة، سبب الفارق"],nextd:["Prochaine date","التاريخ القادم"],addl:["+ Ajouter une entrée","+ إضافة سجل"],
+login:["Connexion","تسجيل الدخول"],signup:["Créer mon compte","إنشاء حسابي"],email:["E-mail","البريد الإلكتروني"],pw:["Mot de passe (6 caractères minimum)","كلمة المرور (6 أحرف على الأقل)"],out:["Déconnexion","تسجيل الخروج"],
+cfg:["Configuration manquante : renseignez SB_URL et SB_KEY en haut du fichier.","الإعداد ناقص: أدخل SB_URL و SB_KEY في أعلى الملف."],conf:["Compte créé. Vérifiez votre e-mail pour confirmer, puis connectez-vous.","تم إنشاء الحساب. تحقق من بريدك الإلكتروني للتأكيد ثم سجّل الدخول."]};
+const $=s=>document.querySelector(s),has=v=>v!=null&&v!=='';
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let S={lang:'fr',p:[]},cur=null,tab=0,armed=0;
+try{S.lang=localStorage.getItem('arvea_lang')||'fr'}catch(e){}
+const t=k=>L[k][S.lang=='ar'?1:0];
+let sb,U=null;const tm={};
+try{sb=supabase.createClient(SB_URL,SB_KEY)}catch(e){}
+const setSv=x=>{const e=$('#sv');if(e)e.textContent=x};
+const save=()=>{try{localStorage.setItem('arvea_lang',S.lang)}catch(e){}
+if(!cur||!sb)return;const p=cur;clearTimeout(tm[p.id]);setSv('…');
+tm[p.id]=setTimeout(async()=>{const r=await sb.from('partners').upsert({id:p.id,data:p,updated_at:new Date().toISOString()});setSv(r.error?'⚠ '+r.error.message:t('saved'))},600)};
+async function load(){const r=await sb.from('partners').select('data').order('updated_at');S.p=(r.data||[]).map(x=>({...np(),...x.data}))}
+async function init(){if(sb){const{data}=await sb.auth.getSession();U=data.session?data.session.user:null;if(U)await load()}render()}
+const auth=()=>`<div class="c"><h2>${t('login')}</h2><div class="g"><label>${t('email')}<input id="em" type="email" autocomplete="email"></label><label>${t('pw')}<input id="pw" type="password" autocomplete="current-password"></label></div><p><button class="p" data-a="in">${t('login')}</button> <button data-a="up">${t('signup')}</button></p><p id="am" style="color:var(--mu)"></p></div>`;
+const g=(o,p)=>p.split('.').reduce((a,k)=>a==null?a:a[k],o);
+function setp(o,p,v){const k=p.split('.'),l=k.pop();k.forEach(a=>o=o[a]??={});o[l]=v}
+const np=()=>({id:crypto.randomUUID(),w:[{},{},{},{}],r:[{},{},{},{},{}],t8:[{}],h:[{}],lg:[],lv:'0'});
+function F(p,ty='text',o=[]){const v=g(cur,p);
+if(ty=='area')return `<textarea data-p="${p}">${esc(v)}</textarea>`;
+if(ty=='sel')return `<select data-p="${p}"><option value=""></option>${o.map((x,i)=>`<option value="${i}"${has(v)&&v==i?' selected':''}>${esc(x)}</option>`).join('')}</select>`;
+if(ty=='chk')return `<input type="checkbox" data-p="${p}"${v?' checked':''}>`;
+return `<input type="${ty}" data-p="${p}" value="${esc(v)}">`}
+const lab=(k,f)=>`<label>${t(k)}${f}</label>`;
+const C=['contacts','invit','pres','relances','closings','vol'];
+const tot=c=>cur.t8.reduce((a,r)=>a+(+r[c]||0),0);
+const upTot=()=>C.forEach(c=>{const e=$('#tt_'+c);if(e)e.textContent=tot(c)});
+const lr=p=>[...p.t8].reverse().find(r=>has(r.rd))?.rd;
+const stt=p=>has(p.f?.s)?[t('st90')[p.f.s],'gyor'[p.f.s]]:has(p.j?.s)?[t('st30')[p.j.s],'gyr'[p.j.s]]:['—','n'];
+
+function t3(){let w='';for(let i=0;i<4;i++)w+=`<div class="c"><b>${t('week')} ${i+1}</b><div class="g">${lab('date',F(`w.${i}.d`,'date'))}${lab('acts',F(`w.${i}.a`,'area'))}${lab('block',F(`w.${i}.b`,'area'))}${lab('pos',F(`w.${i}.p`,'area'))}${lab('next',F(`w.${i}.n`,'area'))}</div></div>`;
+return `<div class="c"><h3>${t('A')}</h3><div class="g">${lab('name',F('name'))}${lab('phone',F('phone','tel'))}${lab('leader',F('leader'))}${lab('d0',F('d0','date'))}${lab('why',F('why','sel',t('whyo')))}${lab('hours',F('hours','number'))}${lab('exp',F('exp','area'))}${lab('goal',F('goal','area'))}${lab('goald',F('goald','date'))}</div></div><h3>${t('B')}</h3>${w}<div class="c"><h3>${t('C')}</h3><div class="g">${lab('status',F('j.s','sel',t('st30')))}${lab('decl',F('j.d','sel',t('dec')))}${lab('comment',F('j.c','area'))}</div></div>`}
+function t4(){let r='';for(let i=0;i<5;i++)r+=`<div class="c"><b>${t('rev')} ${i+1}</b><div class="g">${lab('date',F(`r.${i}.d`,'date'))}${lab('best',F(`r.${i}.b`,'area'))}${lab('cost',F(`r.${i}.c`,'area'))}${lab('kind',F(`r.${i}.k`,'sel',t('kinds')))}${lab('prog',F(`r.${i}.p`,'area'))}${lab('status',F(`r.${i}.s`,'sel',t('st90')))}${lab('decl',F(`r.${i}.x`,'sel',t('dec')))}</div></div>`;
+return `<div class="c">${lab('goal',F('goal','area'))}</div>${r}<div class="c"><h3>${t('final')}</h3><div class="g">${lab('status',F('f.s','sel',t('st90')))}${lab('level',F('lv','sel',t('lvs')))}${lab('just',F('f.j','area'))}</div></div>`}
+function t8(){const R=cur.t8.map((r,i)=>`<tr><td>${F(`t8.${i}.f`,'date')}</td>${C.map(c=>`<td>${F(`t8.${i}.${c}`,'number')}</td>`).join('')}<td>${F(`t8.${i}.ind`)}</td><td>${F(`t8.${i}.ok`,'chk')}</td><td>${F(`t8.${i}.rd`,'sel',t('rds'))}</td><td>${F(`t8.${i}.act`)}</td><td><button data-a="delw" data-v="${i}">×</button></td></tr>`).join('');
+return `<div class="c"><div class="w"><table class="t8"><tr><th>${t('from')}</th>${C.map(c=>`<th>${t(c)}</th>`).join('')}<th>${t('ind')}</th><th>${t('ok')}</th><th>${t('read')}</th><th>${t('act')}</th><th></th></tr>${R}<tr><th>${t('tot')}</th>${C.map(c=>`<th id="tt_${c}">${tot(c)}</th>`).join('')}<th colspan="5"></th></tr></table></div><button class="p" data-a="addw">${t('addw')}</button></div>`}
+function t9(){const H=cur.h.map((r,i)=>`<div class="c"><div class="g">${lab('date',F(`h.${i}.d`,'date'))}${lab('level',F(`h.${i}.l`,'sel',t('lvs')))}${lab('proof',F(`h.${i}.p`,'area'))}${lab('decl',F(`h.${i}.x`,'area'))}</div><button data-a="delh" data-v="${i}">×</button></div>`).join('');
+return `<div class="c">${lab('level',F('lv','sel',t('lvs')))}</div><h3>${t('hist')}</h3>${H}<button class="p" data-a="addh">${t('addh')}</button>`}
+function tl(){const H=cur.lg.map((r,i)=>`<div class="c"><div class="g">${lab('type',F(`lg.${i}.t`,'sel',t('lgt')))}${lab('date',F(`lg.${i}.d`,'date'))}${lab('subj',F(`lg.${i}.s`,'area'))}${lab('notes',F(`lg.${i}.n`,'area'))}${lab('nextd',F(`lg.${i}.x`,'date'))}</div><button data-a="dell" data-v="${i}">×</button></div>`).join('');
+return H+`<button class="p" data-a="addl">${t('addl')}</button>`}
+function fiche(){return `<div class="c" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button data-a="back">${t('back')}</button><h2 style="flex:1;font-size:17px">${esc(cur.name)||t('np')}</h2><span id="sv" style="color:var(--mu);font-size:12px">${t('saved')}</span><button data-a="del">${armed?t('cdel'):t('del')}</button></div><div class="tabs">${[0,1,2,3,4].map(i=>`<button data-a="tab" data-v="${i}" class="${i==tab?'on':''}">${t('tb'+i)}</button>`).join('')}</div>${[t3,t4,t8,t9,tl][tab]()}`}
+function home(){const P=S.p,sum=k=>P.reduce((a,p)=>a+p.t8.reduce((b,r)=>b+(+r[k]||0),0),0),cnt=f=>P.filter(f).length;
+const W=P.filter(p=>['1','2'].includes(lr(p))||p.j?.s==='2'||p.f?.s==='3');
+const rows=P.map(p=>{const[s,c]=stt(p),r=lr(p);return `<tr data-a="open" data-v="${p.id}"><td>${esc(p.name)||'—'}</td><td>${esc(p.leader)}</td><td><span class="bd s_${c}">${esc(s)}</span></td><td>N${p.lv||0}</td><td>${has(r)?['🟢','🟠','🔴'][r]:''}</td><td>${p.t8.reduce((a,x)=>a+(+x.vol||0),0)}</td></tr>`}).join('');
+return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><h2 style="flex:1">${t('dash')}</h2><button class="p" data-a="new">${t('add')}</button></div>
+<div class="k">${[['nb',P.length],['contacts',sum('contacts')],['invit',sum('invit')],['pres',sum('pres')],['closings',sum('closings')],['vol',sum('vol')]].map(([k,v])=>`<div class="c"><b>${v}</b>${t(k)}</div>`).join('')}</div>
+<div class="c"><b>${t('byst')}</b><p>${t('st90').map((x,i)=>`<span class="bd s_${'gyor'[i]}">${x}: ${cnt(p=>has(p.f?.s)&&p.f.s==i)}</span>`).join(' ')}</p><b>${t('lvl')}</b><p>${[0,1,2,3].map(i=>`N${i}: ${cnt(p=>(p.lv||'0')==i)}`).join(' · ')}</p></div>
+${W.length?`<div class="c"><b>⚠ ${t('watch')}</b><p>${W.map(p=>esc(p.name)||'—').join(' · ')}</p></div>`:''}
+${P.length?`<div class="c w"><table><tr><th>${t('name')}</th><th>${t('leader')}</th><th>${t('status')}</th><th>${t('level')}</th><th>${t('read')}</th><th>${t('vol')}</th></tr>${rows}</table></div>`:`<div class="c">${t('none')}</div>`}`}
+function render(){document.documentElement.lang=S.lang;document.documentElement.dir=S.lang=='ar'?'rtl':'ltr';document.title=t('title');
+$('#app').innerHTML=`<header><h1>${t('title')}</h1><button data-a="lang" data-v="fr" class="${S.lang=='fr'?'on':''}">FR</button><button data-a="lang" data-v="ar" class="${S.lang=='ar'?'on':''}">العربية</button>${U?`<button data-a="out">${t('out')}</button>`:''}</header>`+(!sb?`<div class="c">${t('cfg')}</div>`:!U?auth():cur?fiche():home())}
+document.addEventListener('input',e=>{const p=e.target.dataset&&e.target.dataset.p;if(p&&cur){setp(cur,p,e.target.type=='checkbox'?e.target.checked:e.target.value);save();if(p.startsWith('t8.'))upTot()}});
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,v=b.dataset.v;
+if(a=='in'||a=='up'){const r=await sb.auth[a=='in'?'signInWithPassword':'signUp']({email:$('#em').value.trim(),password:$('#pw').value});
+if(r.error)$('#am').textContent=r.error.message;else if(r.data.session){U=r.data.user;await load();render()}else $('#am').textContent=t('conf');return}
+if(a=='out'){await sb.auth.signOut();U=null;S.p=[];cur=null;render();return}
+if(a=='lang')S.lang=v;
+else if(a=='new'){cur=np();S.p.push(cur);tab=0}
+else if(a=='open'){cur=S.p.find(p=>p.id==v);tab=0}
+else if(a=='back')cur=null;
+else if(a=='tab')tab=+v;
+else if(a=='del'){if(!armed){armed=1;render();return}await sb.from('partners').delete().eq('id',cur.id);S.p=S.p.filter(p=>p!==cur);cur=null}
+else if(a=='addw')cur.t8.push({});else if(a=='delw')cur.t8.splice(v,1);
+else if(a=='addh')cur.h.push({});else if(a=='delh')cur.h.splice(v,1);
+else if(a=='addl')cur.lg.push({});else if(a=='dell')cur.lg.splice(v,1);
+armed=0;save();render()});
+$('#app').textContent='…';init();
+</script></body></html>
